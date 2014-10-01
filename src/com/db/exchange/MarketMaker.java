@@ -1,6 +1,6 @@
 package com.db.exchange;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 /**
  * Created by krm on 30.09.14.
@@ -8,20 +8,25 @@ import java.util.concurrent.ThreadLocalRandom;
 class MarketMaker implements Runnable {
     private static final double BID_FR = 1.3;
     private static final double ASK_FR = 1.7;
+    private final Random rnd;
     private final ExchangeImpl exchange;
+    private long startTime;
 
-    MarketMaker(ExchangeImpl exchange) {
+    MarketMaker(ExchangeImpl exchange, int seed) {
         this.exchange = exchange;
+        this.rnd = new Random(seed);
     }
 
     @Override
     public void run() {
+        startTime = System.currentTimeMillis();
         for (String security : exchange.getAvailableSecurities()) {
             double price = calcPrice(security);
             double bidDelta = generateBidDelta();
             double askDelta = generateAskDelta();
             Order order = new Order(price + bidDelta, price + askDelta);
             exchange.setNewPrices(security, order);
+            Thread.yield();
         }
     }
 
@@ -30,14 +35,14 @@ class MarketMaker implements Runnable {
     }
 
     private double generateBidDelta() {
-        return - Math.abs(Math.sin(t() * BID_FR) * (ThreadLocalRandom.current().nextDouble(0.001) + 0.00001));
+        return - Math.abs(Math.sin(t() * BID_FR) * (rnd.nextDouble() % 0.001) + 1e-7);
     }
 
     private double generateAskDelta() {
-        return Math.abs(Math.sin(t() * ASK_FR) * (ThreadLocalRandom.current().nextDouble(0.001) + 0.00001));
+        return Math.abs(Math.sin(t() * ASK_FR) * (rnd.nextDouble() % 0.001) + 1e-7);
     }
 
     private double t() {
-        return System.currentTimeMillis();
+        return System.currentTimeMillis() - startTime;
     }
 }

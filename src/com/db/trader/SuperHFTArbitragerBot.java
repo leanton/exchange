@@ -6,25 +6,28 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by krm on 30.09.14.
  */
 public class SuperHFTArbitragerBot {
     private final Set<? extends Exchange> exchanges;
-    private final Map<String, Pair> maxBids;
-    private final Map<String, Pair> minAsks;
+    private final Map<String, ExchangeInfo> maxBids;
+    private final Map<String, ExchangeInfo> minAsks;
+    private final long timeToWorkMillis;
     private double balance;
 
-    public SuperHFTArbitragerBot(Set<? extends Exchange> exchanges, double initialBalance) {
-        this.balance = initialBalance;
+    public SuperHFTArbitragerBot(Set<? extends Exchange> exchanges, double balance, long timeToWork, TimeUnit unit) {
+        this.balance = balance;
+        this.timeToWorkMillis = unit.toMillis(timeToWork);
         this.exchanges = exchanges;
         Exchange exchange = exchanges.iterator().next();
-        HashMap<String, Pair> bids = new HashMap<>();
-        HashMap<String, Pair> asks = new HashMap<>();
+        HashMap<String, ExchangeInfo> bids = new HashMap<>();
+        HashMap<String, ExchangeInfo> asks = new HashMap<>();
         for (String security : exchange.getAvailableSecurities()) {
-            bids.put(security, new Pair(exchange, 0.0));
-            asks.put(security, new Pair(exchange, Double.MAX_VALUE));
+            bids.put(security, new ExchangeInfo(exchange, 0.0));
+            asks.put(security, new ExchangeInfo(exchange, Double.MAX_VALUE));
         }
         this.maxBids = Collections.unmodifiableMap(bids);
         this.minAsks = Collections.unmodifiableMap(asks);
@@ -36,7 +39,8 @@ public class SuperHFTArbitragerBot {
 
     private void startTrading() {
         System.out.println("Trading started with " + balance + "! Good luck!");
-        for (int i = 0; i < 100_000; ++i) {
+        long timeToStop = System.currentTimeMillis() + timeToWorkMillis;
+        while (System.currentTimeMillis() < timeToStop) {
             arbitrage(exchanges);
         }
         System.out.println("Your balance is " + balance);
@@ -59,9 +63,9 @@ public class SuperHFTArbitragerBot {
     }
 
     private void playOnMaxBid(Exchange exchange, String security, double bid, double ask) {
-        Pair bidPair = maxBids.get(security);
-        double maxBid = bidPair.price;
-        Exchange expensiveExchange = bidPair.exchange;
+        ExchangeInfo maxBidInfo = maxBids.get(security);
+        double maxBid = maxBidInfo.price;
+        Exchange expensiveExchange = maxBidInfo.exchange;
         if (maxBid > ask) {
             trade(expensiveExchange, exchange, security, maxBid, ask);
         } else if (maxBid < bid) {
@@ -70,9 +74,9 @@ public class SuperHFTArbitragerBot {
     }
 
     private void playOnMinAsk(Exchange exchange, String security, double bid, double ask) {
-        Pair askPair = minAsks.get(security);
-        double minAsk = askPair.price;
-        Exchange cheapExchange = askPair.exchange;
+        ExchangeInfo minAskInfo = minAsks.get(security);
+        double minAsk = minAskInfo.price;
+        Exchange cheapExchange = minAskInfo.exchange;
         if (minAsk < bid) {
             trade(exchange, cheapExchange, security, bid, minAsk);
         } else if (minAsk > ask) {
@@ -116,10 +120,10 @@ public class SuperHFTArbitragerBot {
         return false;
     }
 
-    private class Pair {
+    private class ExchangeInfo {
         Exchange exchange;
         double price;
-        private Pair(Exchange exchange, double price) {
+        private ExchangeInfo(Exchange exchange, double price) {
             this.exchange = exchange;
             this.price = price;
         }
