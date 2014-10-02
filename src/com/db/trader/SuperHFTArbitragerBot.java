@@ -33,16 +33,20 @@ public class SuperHFTArbitragerBot {
         this.minAsks = Collections.unmodifiableMap(asks);
     }
 
+    public double getBalance() {
+        return balance;
+    }
+
     public void startTrading() {
-        System.out.println("Trading started with " + balance + "! Good luck!");
+        System.out.println("Start trading!");
         long timeToStop = System.currentTimeMillis() + timeToWorkMillis;
         while (System.currentTimeMillis() < timeToStop) {
             arbitrage(exchanges);
         }
-        System.out.println("Your balance is " + balance);
+        System.out.println("Your current balance is " + balance);
     }
 
-    private void arbitrage(Set<? extends Exchange> exchanges) {
+    public void arbitrage(Set<? extends Exchange> exchanges) {
         for (Exchange exchange : exchanges) {
             Set<String> securities = exchange.getAvailableSecurities();
             for (String security : securities) {

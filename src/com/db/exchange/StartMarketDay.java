@@ -25,11 +25,24 @@ public class StartMarketDay {
         exchanges.add(new ExchangeImpl(DefaultSecurityPrices.getAllSecurities()));
         exchanges.add(new ExchangeImpl(DefaultSecurityPrices.getAllSecurities()));
         exchanges.add(new ExchangeImpl(DefaultSecurityPrices.getAllSecurities()));
+
+        Set<MarketMaker> marketMakers = new HashSet<>();
         int i = 0;
         for (ExchangeImpl exchange : exchanges) {
-            executor.scheduleAtFixedRate(new MarketMaker(exchange, ++i), 0, 50, TimeUnit.MILLISECONDS);
+            marketMakers.add(new MarketMaker(exchange, ++i));
         }
-        executor.scheduleAtFixedRate(new InvisibleHandOfMarket(exchanges), 0, 50, TimeUnit.MILLISECONDS);
-        new Thread(new SuperHFTArbitragerBot(exchanges, 1000.0, 5, TimeUnit.SECONDS)::startTrading).start();
+        InvisibleHandOfMarket ihm = new InvisibleHandOfMarket(exchanges);
+        SuperHFTArbitragerBot bot = new SuperHFTArbitragerBot(exchanges, 1000.0, 5, TimeUnit.SECONDS);
+        Thread marketMaking = new Thread(() -> {
+            while (true) {
+                for (MarketMaker mm : marketMakers) {
+                    mm.run();
+                }
+                ihm.run();
+            }
+        });
+        marketMaking.setDaemon(true);
+        marketMaking.start();
+        new Thread(bot::startTrading).start();
     }
 }
