@@ -16,6 +16,7 @@ public class SuperHFTArbitragerBot {
     private final Map<String, ExchangeInfo> maxBids;
     private final Map<String, ExchangeInfo> minAsks;
     private final long timeToWorkMillis;
+    private double securitiesPv = 0.0;
     private double balance;
 
     public SuperHFTArbitragerBot(Set<? extends Exchange> exchanges, double balance, long timeToWork, TimeUnit unit) {
@@ -38,8 +39,19 @@ public class SuperHFTArbitragerBot {
         long timeToStop = System.currentTimeMillis() + timeToWorkMillis;
         while (System.currentTimeMillis() < timeToStop) {
             arbitrage(exchanges);
+            cleanUpStaleInfo();
         }
-        System.out.println("Your balance is " + balance);
+        System.out.println("Your balance is " + balance + " you've got securities on " + securitiesPv);
+        System.out.println("Your overall profit is: " + (securitiesPv + balance));
+    }
+
+    private void cleanUpStaleInfo() {
+        for (ExchangeInfo info : maxBids.values()) {
+            info.price = 0.0;
+        }
+        for (ExchangeInfo info : minAsks.values()) {
+            info.price = Double.MAX_VALUE;
+        }
     }
 
     private void arbitrage(Set<? extends Exchange> exchanges) {
@@ -85,7 +97,8 @@ public class SuperHFTArbitragerBot {
             if (sell(expensiveExchange, security, bid)) {
                 System.out.println("Gotcha! " + security + " bid " + bid + " ask " + ask);
             } else {
-                System.out.println("Oops! Just lost " + ask);
+                securitiesPv += ask;
+                System.out.println("Oops! Just spent " + ask);
             }
         }
     }
