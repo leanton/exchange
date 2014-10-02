@@ -33,11 +33,7 @@ public class SuperHFTArbitragerBot {
         this.minAsks = Collections.unmodifiableMap(asks);
     }
 
-    public void start() {
-        new Thread(this::startTrading).start();
-    }
-
-    private void startTrading() {
+    public void startTrading() {
         System.out.println("Trading started with " + balance + "! Good luck!");
         long timeToStop = System.currentTimeMillis() + timeToWorkMillis;
         while (System.currentTimeMillis() < timeToStop) {

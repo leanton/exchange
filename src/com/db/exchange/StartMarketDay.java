@@ -30,6 +30,6 @@ public class StartMarketDay {
             executor.scheduleAtFixedRate(new MarketMaker(exchange, ++i), 0, 50, TimeUnit.MILLISECONDS);
         }
         executor.scheduleAtFixedRate(new InvisibleHandOfMarket(exchanges), 0, 50, TimeUnit.MILLISECONDS);
-        new SuperHFTArbitragerBot(exchanges, 1000.0, 5, TimeUnit.SECONDS).start();
+        new Thread(new SuperHFTArbitragerBot(exchanges, 1000.0, 5, TimeUnit.SECONDS)::startTrading).start();
     }
 }

@@ -8,6 +8,8 @@ import java.util.Random;
 class MarketMaker implements Runnable {
     private static final double BID_FR = 1.3;
     private static final double ASK_FR = 1.7;
+    private static final double BID_PH = 1.3;
+    private static final double ASK_PH = 1.7;
     private final Random rnd;
     private final ExchangeImpl exchange;
     private long startTime;
@@ -35,11 +37,11 @@ class MarketMaker implements Runnable {
     }
 
     private double generateBidDelta() {
-        return - Math.abs(Math.sin(t() * BID_FR) * (rnd.nextDouble() % 0.001) + 1e-7);
+        return - Math.abs(Math.sin(t() * BID_FR + BID_PH) * (rnd.nextDouble() % 0.001) + 1e-7);
     }
 
     private double generateAskDelta() {
-        return Math.abs(Math.sin(t() * ASK_FR) * (rnd.nextDouble() % 0.001) + 1e-7);
+        return Math.abs(Math.sin(t() * ASK_FR + ASK_PH) * (rnd.nextDouble() % 0.001) + 1e-7);
     }
 
     private double t() {
