@@ -37,15 +37,6 @@ public class SuperHFTArbitragerBot {
         return balance;
     }
 
-    public void startTrading() {
-        System.out.println("Start trading!");
-        long timeToStop = System.currentTimeMillis() + timeToWorkMillis;
-        while (System.currentTimeMillis() < timeToStop) {
-            arbitrage(exchanges);
-        }
-        System.out.println("Your current balance is " + balance);
-    }
-
     public void arbitrage(Set<? extends Exchange> exchanges) {
         for (Exchange exchange : exchanges) {
             Set<String> securities = exchange.getAvailableSecurities();

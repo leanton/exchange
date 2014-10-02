@@ -47,7 +47,7 @@ class ExchangeImpl implements Exchange {
     public boolean buy(String security, double price) {
         synchronized(lock) {
             Order order = marketData.get(security);
-            if (order.ask >= price) {
+            if (order.ask <= price) {
                 return true;
             }
             return false;
@@ -58,7 +58,7 @@ class ExchangeImpl implements Exchange {
     public boolean sell(String security, double price) {
         synchronized(lock) {
             Order order = marketData.get(security);
-            if (order.bid <= price) {
+            if (order.bid >= price) {
                 return true;
             }
             return false;
