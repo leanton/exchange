@@ -50,7 +50,7 @@ public class SuperHFTArbitrageBotEdu {
                 double maxBid = maxBidInfo.price;
                 Exchange expensiveExchange = maxBidInfo.exchange;
 
-                if (ask > maxBid) {
+                if (ask < maxBid) {
 
                     trade(expensiveExchange, exchange, security, maxBid, ask);
 
